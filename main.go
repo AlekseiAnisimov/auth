@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/go-ozzo/ozzo-dbx"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
@@ -17,6 +19,8 @@ type UserIdentityData struct {
 	Phone    string `json:"phone"`
 	Password string `json:"password"`
 }
+
+var db, _ = dbx.Open("mysql", "root:123@/auth")
 
 func main() {
 	router := mux.NewRouter()
@@ -60,6 +64,20 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(w, "tst")
 	fmt.Println(w, passwordHash)
 	fmt.Println(w, phone)
+
+	user := UserIdentityData{}
+
+	_ = db.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
+
+	if  user.Login == "" {
+		w.WriteHeader(403)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Such user is exist",
+		})
+	}
+
+	db.Model(&data).Insert()
+
 	json.NewEncoder(w).Encode(data)
 }
 
