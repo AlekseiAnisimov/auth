@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 
 	"github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"gopkg.in/yaml.v2"
 )
 
 type UserIdentityData struct {
@@ -20,15 +22,38 @@ type UserIdentityData struct {
 	Password string `json:"password"`
 }
 
-var db, _ = dbx.Open("mysql", "root:123@/auth")
+type DbConfig struct {
+	Development struct {
+		Dialect    string
+		Datasource string
+	}
+}
+
+type Env struct {
+	db *dbx.DB
+}
+
+var dbConfigFile = "dbconfig.yml"
 
 func main() {
+	dbconf := DbConfig{}
+	err := dbconf.getDbParamsFromYaml()
+	if err != nil {
+		panic(err)
+	}
+
+	dialect := &dbconf.Development.Dialect
+	datasource := &dbconf.Development.Datasource
+
+	var db, _ = dbx.Open(*dialect, *datasource)
+	env := Env{db: db}
+
 	router := mux.NewRouter()
-	router.HandleFunc("/registration", Registration).Methods("POST")
+	router.HandleFunc("/registration", env.Registration).Methods("POST")
 	http.ListenAndServe(":8000", router)
 }
 
-func Registration(w http.ResponseWriter, r *http.Request) {
+func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var data UserIdentityData
 	var passToHash []byte
@@ -55,6 +80,7 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Email no valid",
 		})
+		return
 	}
 
 	passToHash = []byte(*password)
@@ -67,16 +93,17 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 
 	user := UserIdentityData{}
 
-	_ = db.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
+	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
 
-	if  user.Login == "" {
+	if user.Login != "" {
 		w.WriteHeader(403)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Such user is exist",
 		})
+		return
 	}
 
-	db.Model(&data).Insert()
+	_ = env.db.Model(&data).Insert()
 
 	json.NewEncoder(w).Encode(data)
 }
@@ -90,4 +117,22 @@ func isValidEmail(email string) error {
 	}
 
 	return nil
+}
+
+func (dbconf *DbConfig) getDbParamsFromYaml() error {
+	fopen, err := ioutil.ReadFile(dbConfigFile)
+	if err != nil {
+		return err
+	}
+
+	err = yaml.Unmarshal(fopen, &dbconf)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u UserIdentityData) TableName() string {
+	return "identity"
 }
