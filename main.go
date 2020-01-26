@@ -85,6 +85,7 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 
 	passToHash = []byte(*password)
 	passwordHash := md5.Sum(passToHash)
+	data.Password = string(passwordHash[:])
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Println(w, "tst")
