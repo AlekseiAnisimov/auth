@@ -2,12 +2,15 @@ package main
 
 import (
 	"crypto/md5"
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
@@ -16,6 +19,7 @@ import (
 )
 
 type UserIdentityData struct {
+	Id       int
 	Login    string `json:"login"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
@@ -122,8 +126,19 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token := tokenGenerator()
+	toketExpired := int32(time.Now().Unix()) + 10800
+
+	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
+
+	type Result struct {
+		Id    int
+		Token string
+	}
+	result := Result{user.Id, token}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(result)
 }
 
 func isValidEmail(email string) error {
@@ -161,4 +176,10 @@ func (u UserIdentityData) passwordToMd5() string {
 	passString := hex.EncodeToString(passwordHash[:])
 
 	return passString
+}
+
+func tokenGenerator() string {
+	b := make([]byte, 8)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
 }
