@@ -55,6 +55,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/registration", env.Registration).Methods("POST")
 	router.HandleFunc("/login", env.IdentityByLogin).Methods("POST")
+	router.HandleFunc("/login/email", env.IdentityByEmail).Methods("POST")
 	http.ListenAndServe(":8000", router)
 }
 
@@ -119,6 +120,41 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"login": login, "password": password}).One(&user)
 
 	if user.Login == "" {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "User not found",
+		})
+		return
+	}
+
+	token := tokenGenerator()
+	toketExpired := int32(time.Now().Unix()) + 10800
+
+	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
+
+	type Result struct {
+		Id    int
+		Token string
+	}
+	result := Result{user.Id, token}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
+}
+
+func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var data UserIdentityData
+	_ = json.NewDecoder(r.Body).Decode(&data)
+
+	email := &data.Email
+	password := data.passwordToMd5()
+
+	user := UserIdentityData{}
+	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"email": email, "password": password}).One(&user)
+
+	if user.Email == "" {
 		w.WriteHeader(404)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "User not found",
