@@ -56,6 +56,7 @@ func main() {
 	router.HandleFunc("/registration", env.Registration).Methods("POST")
 	router.HandleFunc("/login", env.IdentityByLogin).Methods("POST")
 	router.HandleFunc("/login/email", env.IdentityByEmail).Methods("POST")
+	router.HandleFunc("/token/check", env.checkToken).Methods("GET", "POST")
 	http.ListenAndServe(":8000", router)
 }
 
@@ -128,9 +129,9 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := tokenGenerator()
-	toketExpired := int32(time.Now().Unix()) + 10800
+	tokenExpired := int32(time.Now().Unix() + 20800)
 
-	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
+	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": tokenExpired}, dbx.HashExp{"id": user.Id}).Execute()
 
 	type Result struct {
 		Id    int
