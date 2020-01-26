@@ -2,9 +2,9 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -50,20 +50,19 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/registration", env.Registration).Methods("POST")
+	router.HandleFunc("/login", env.IdentityByLogin).Methods("POST")
 	http.ListenAndServe(":8000", router)
 }
 
 func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var data UserIdentityData
-	var passToHash []byte
 
 	_ = json.NewDecoder(r.Body).Decode(&data)
 
 	login := &data.Login
 	email := &data.Email
 	password := &data.Password
-	phone := &data.Phone
 
 	if *login == "" || *email == "" || *password == "" {
 		w.WriteHeader(403)
@@ -83,14 +82,7 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passToHash = []byte(*password)
-	passwordHash := md5.Sum(passToHash)
-	data.Password = string(passwordHash[:])
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Println(w, "tst")
-	fmt.Println(w, passwordHash)
-	fmt.Println(w, phone)
+	data.Password = data.passwordToMd5()
 
 	user := UserIdentityData{}
 
@@ -106,7 +98,32 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 
 	_ = env.db.Model(&data).Insert()
 
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)
+}
+
+func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var data UserIdentityData
+	_ = json.NewDecoder(r.Body).Decode(&data)
+
+	login := &data.Login
+	password := data.passwordToMd5()
+
+	user := UserIdentityData{}
+	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"login": login, "password": password}).One(&user)
+
+	if user.Login == "" {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "User not found",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }
 
 func isValidEmail(email string) error {
@@ -136,4 +153,12 @@ func (dbconf *DbConfig) getDbParamsFromYaml() error {
 
 func (u UserIdentityData) TableName() string {
 	return "identity"
+}
+
+func (u UserIdentityData) passwordToMd5() string {
+	passByte := []byte(u.Password)
+	passwordHash := md5.Sum(passByte)
+	passString := hex.EncodeToString(passwordHash[:])
+
+	return passString
 }
