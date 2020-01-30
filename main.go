@@ -134,8 +134,8 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": tokenExpired}, dbx.HashExp{"id": user.Id}).Execute()
 
 	type Result struct {
-		Id    int
-		Token string
+		Id    int	`json:"id"`
+		Token string	`json:"token"`
 	}
 	result := Result{user.Id, token}
 
@@ -169,8 +169,8 @@ func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
 
 	type Result struct {
-		Id    int
-		Token string
+		Id    int	`json:"id"`
+		Token string	`json:"token"`
 	}
 	result := Result{user.Id, token}
 
