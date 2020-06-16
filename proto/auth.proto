@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package  auth;
+
+service AuthService {
+  rpc Do(BearerAuthRequest) returns (BearerAuthResponse) {}
+}
+
+
+message BearerAuthRequest {
+
+}
+
+message BearerAuthResponse {
+
+}
