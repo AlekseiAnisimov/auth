@@ -78,7 +78,7 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := isValidEmail(*email)
+	err := IsValidEmail(*email)
 
 	if err != nil {
 		w.WriteHeader(403)
@@ -219,4 +219,9 @@ func tokenGenerator() string {
 	b := make([]byte, 8)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+
+
+func (env *Env) GetEnvDbPointer() *dbx.DB {
+	return env.db
 }
