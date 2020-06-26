@@ -1,13 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	"net"
 	"fmt"
-	register "../proto"
-	"net/http"
-
+	//register "../proto"
+	register "github.com/AlekseiAnisimov/auth/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	auth "github.com/AlekseiAnisimov/auth"
@@ -24,49 +22,53 @@ func main() {
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
 
-	register.RegisterServiceServer(grpcServer, &server{})
+	register.RegisterRegisterServiceServer(grpcServer, &server{})
 	grpcServer.Serve(listener)
 }
 
-func (s *server) Registration(ctn *context.Context, request *register.RegisterRequest) (response *register.RegisterResponse, err error) {
+func (s *server) Registration(ctn context.Context, request *register.RegisterRequest) (response *register.RegisterResponse, err error) {
 	login := request.Login
 	email := request.Email
 	password := request.Password
 
 	if login == "" || email == "" || password == "" {
 		response = &register.RegisterResponse{
-			Message: "The field must be filled in"
+			Message: "The field must be filled in",
 		}
 		return response, nil
 	}
 
-	err := isValidEmail(*email)
+	err = auth.IsValidEmail(email)
 
 	if err != nil {
-		w.WriteHeader(403)
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Email no valid",
-		})
-		return
+		response = &register.RegisterResponse{
+			Message: "Email no valid",
+		}
+		return response, nil
 	}
 
-	data.Password = data.passwordToMd5()
+	data := auth.UserIdentityData{Login: login, Email: email, Password: password}
+	data.Password = data.PasswordToMd5()
 
-	user := UserIdentityData{}
+	user := auth.UserIdentityData{}
+	envDb := auth.Env.GetEnvDbPointer()
 
-	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
+	_ = envDb.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
 
 	if user.Login != "" {
-		w.WriteHeader(403)
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Such user is exist",
-		})
-		return
+		response = &register.RegisterResponse{
+			Message: "Such user is exist",
+		}
+
+		return response, nil
 	}
 
-	_ = env.db.Model(&data).Insert()
+	_ = envDb.Model(&data).Insert()
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(data)
-}
+	response = &register.RegisterResponse{
+		Message: "Success",
+		UserData: &data,
+	}
+
+	return response, nil
 }
