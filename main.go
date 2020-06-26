@@ -178,7 +178,7 @@ func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func isValidEmail(email string) error {
+func IsValidEmail(email string) error {
 	pattern := `^([a-z0-9_-]+\.)*[a-z0-9_-]+@[a-z0-9_-]+(\.[a-z0-9_-]+)*\.[a-z]{2,6}$`
 	res, _ := regexp.MatchString(pattern, email)
 

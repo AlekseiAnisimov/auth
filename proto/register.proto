@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package auth;
+
+import "user_identity_data.proto";
+
+message RegisterRequest {
+  string login = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message RegisterResponse {
+  string message = 1;
+  UserIdentityData user_data = 2;
+}
+
+service RegisterService {
+  rpc Registration(RegisterRequest) returns (RegisterResponse) {}
+}
