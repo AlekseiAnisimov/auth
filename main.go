@@ -88,7 +88,7 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Password = data.passwordToMd5()
+	data.Password = data.PasswordToMd5()
 
 	user := UserIdentityData{}
 
@@ -115,7 +115,7 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&data)
 
 	login := &data.Login
-	password := data.passwordToMd5()
+	password := data.PasswordToMd5()
 
 	user := UserIdentityData{}
 	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"login": login, "password": password}).One(&user)
@@ -150,7 +150,7 @@ func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&data)
 
 	email := &data.Email
-	password := data.passwordToMd5()
+	password := data.PasswordToMd5()
 
 	user := UserIdentityData{}
 	_ = env.db.Select("*").From("identity").Where(dbx.HashExp{"email": email, "password": password}).One(&user)
@@ -207,7 +207,7 @@ func (u UserIdentityData) TableName() string {
 	return "identity"
 }
 
-func (u UserIdentityData) passwordToMd5() string {
+func (u UserIdentityData) PasswordToMd5() string {
 	passByte := []byte(u.Password)
 	passwordHash := md5.Sum(passByte)
 	passString := hex.EncodeToString(passwordHash[:])
