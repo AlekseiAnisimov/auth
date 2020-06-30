@@ -3,14 +3,14 @@ syntax = "proto3";
 package auth;
 
 message UserIdentityData {
-    enum Unit {
-        ID = 0;
-        LOGIN = 1;
-        EMAIL = 2;
-        PHONE = 3;
-        PASSWORD = 4;
-    }
+  enum Unit {
+    ID = 0;
+    LOGIN = 1;
+    EMAIL = 2;
+    PHONE = 3;
+    PASSWORD = 4;
+  }
 
-    uint64 value = 1;
-    Unit unit = 2;
+  uint64 value = 1;
+  Unit unit = 2;
 }
