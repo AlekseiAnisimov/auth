@@ -1,14 +1,15 @@
 package main
 
 import (
-	dbx "github.com/go-ozzo/ozzo-dbx"
-	"net"
 	"fmt"
-	//register "../proto"
+	"net"
+
+	dbx "github.com/go-ozzo/ozzo-dbx"
+
+	auth "github.com/AlekseiAnisimov/auth"
 	register "github.com/AlekseiAnisimov/auth/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	auth "github.com/AlekseiAnisimov/auth"
 )
 
 type server struct{}
@@ -66,7 +67,7 @@ func (s *server) Registration(ctn context.Context, request *register.RegisterReq
 	_ = envDb.Model(&data).Insert()
 
 	response = &register.RegisterResponse{
-		Message: "Success",
+		Message:  "Success",
 		UserData: &data,
 	}
 
