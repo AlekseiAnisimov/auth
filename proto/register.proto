@@ -12,7 +12,7 @@ message RegisterRequest {
 
 message RegisterResponse {
   string message = 1;
-  UserIdentityData user_data = 2;
+  UserIdentityData UserIdentityData = 2;
 }
 
 service RegisterService {
