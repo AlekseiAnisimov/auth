@@ -1,31 +1,19 @@
 package auth
 
 import (
-	"crypto/md5"
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
 	dbx "github.com/go-ozzo/ozzo-dbx"
-	"gopkg.in/yaml.v2"
 )
 
-type DbConfig struct {
-	Development struct {
-		Dialect    string
-		Datasource string
-	}
-}
-
-var dbConfigFile = "dbconfig.yml"
-
+// Registration функция регистрации
 func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var data UserIdentityData
@@ -74,6 +62,7 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// IdentityByLogin аутентификация по логину
 func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -100,15 +89,16 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": tokenExpired}, dbx.HashExp{"id": user.Id}).Execute()
 
 	type Result struct {
-		Id    int    `json:"id"`
+		ID    int    `json:"id"`
 		Token string `json:"token"`
 	}
-	result := Result{user.Id, token}
+	result := Result{user.ID, token}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(result)
 }
 
+// IdentityByEmail аутентификация по email
 func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -135,15 +125,16 @@ func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
 
 	type Result struct {
-		Id    int    `json:"id"`
+		ID    int    `json:"id"`
 		Token string `json:"token"`
 	}
-	result := Result{user.Id, token}
+	result := Result{user.ID, token}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(result)
 }
 
+// IsValidEmail проверка на валидность email
 func IsValidEmail(email string) error {
 	pattern := `^([a-z0-9_-]+\.)*[a-z0-9_-]+@[a-z0-9_-]+(\.[a-z0-9_-]+)*\.[a-z]{2,6}$`
 	res, _ := regexp.MatchString(pattern, email)
@@ -155,40 +146,10 @@ func IsValidEmail(email string) error {
 	return nil
 }
 
-func (dbconf *DbConfig) GetDbParamsFromYaml() error {
-	fopen, err := ioutil.ReadFile(dbConfigFile)
-	if err != nil {
-		return err
-	}
-
-	err = yaml.Unmarshal(fopen, &dbconf)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (u UserIdentityData) TableName() string {
-	return "identity"
-}
-
-func (u UserIdentityData) PasswordToMd5() string {
-	passByte := []byte(u.Password)
-	passwordHash := md5.Sum(passByte)
-	passString := hex.EncodeToString(passwordHash[:])
-
-	return passString
-}
-
 func tokenGenerator() string {
 	b := make([]byte, 8)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
-}
-
-func (env *Env) GetEnvDbPointer() *dbx.DB {
-	return env.db
 }
 
 func (env *Env) checkToken(w http.ResponseWriter, r *http.Request) {
