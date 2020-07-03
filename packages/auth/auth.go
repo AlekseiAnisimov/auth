@@ -17,14 +17,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type UserIdentityData struct {
-	Id       int
-	Login    string `json:"login"`
-	Email    string `json:"email"`
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
-}
-
 type DbConfig struct {
 	Development struct {
 		Dialect    string
@@ -193,6 +185,10 @@ func tokenGenerator() string {
 	b := make([]byte, 8)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+
+func (env *Env) GetEnvDbPointer() *dbx.DB {
+	return env.db
 }
 
 func (env *Env) checkToken(w http.ResponseWriter, r *http.Request) {
