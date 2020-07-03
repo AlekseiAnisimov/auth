@@ -1,7 +1,7 @@
 package main
 
 import (
-	"auth"
+	"auth/packages/auth"
 	"net/http"
 
 	dbx "github.com/go-ozzo/ozzo-dbx"
@@ -11,7 +11,7 @@ import (
 
 func main() {
 	dbconf := auth.DbConfig{}
-	err := dbconf.getDbParamsFromYaml()
+	err := dbconf.GetDbParamsFromYaml()
 	if err != nil {
 		panic(err)
 	}
@@ -20,7 +20,7 @@ func main() {
 	datasource := &dbconf.Development.Datasource
 
 	var db, _ = dbx.Open(*dialect, *datasource)
-	env := Env{db: db}
+	env := auth.Env{db: db}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/registration", env.Registration).Methods("POST")

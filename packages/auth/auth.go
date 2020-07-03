@@ -32,10 +32,6 @@ type DbConfig struct {
 	}
 }
 
-type Env struct {
-	db *dbx.DB
-}
-
 var dbConfigFile = "dbconfig.yml"
 
 func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +163,7 @@ func IsValidEmail(email string) error {
 	return nil
 }
 
-func (dbconf *DbConfig) getDbParamsFromYaml() error {
+func (dbconf *DbConfig) GetDbParamsFromYaml() error {
 	fopen, err := ioutil.ReadFile(dbConfigFile)
 	if err != nil {
 		return err
@@ -197,10 +193,6 @@ func tokenGenerator() string {
 	b := make([]byte, 8)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
-}
-
-func (env *Env) GetEnvDbPointer() *dbx.DB {
-	return env.db
 }
 
 func (env *Env) checkToken(w http.ResponseWriter, r *http.Request) {
