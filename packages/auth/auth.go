@@ -86,7 +86,7 @@ func (env *Env) IdentityByLogin(w http.ResponseWriter, r *http.Request) {
 	token := tokenGenerator()
 	tokenExpired := int32(time.Now().Unix() + 20800)
 
-	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": tokenExpired}, dbx.HashExp{"id": user.Id}).Execute()
+	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": tokenExpired}, dbx.HashExp{"id": user.ID}).Execute()
 
 	type Result struct {
 		ID    int    `json:"id"`
@@ -122,7 +122,7 @@ func (env *Env) IdentityByEmail(w http.ResponseWriter, r *http.Request) {
 	token := tokenGenerator()
 	toketExpired := int32(time.Now().Unix()) + 10800
 
-	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.Id}).Execute()
+	_, _ = env.db.Update("identity", dbx.Params{"token": token, "token_expired": toketExpired}, dbx.HashExp{"id": user.ID}).Execute()
 
 	type Result struct {
 		ID    int    `json:"id"`
@@ -152,7 +152,8 @@ func tokenGenerator() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func (env *Env) checkToken(w http.ResponseWriter, r *http.Request) {
+// CheckToken проверка на действительность токена
+func (env *Env) CheckToken(w http.ResponseWriter, r *http.Request) {
 	bearer := r.Header.Get("Authorization")
 	splitToken := strings.Split(bearer, "Bearer ")
 	token := splitToken[1]

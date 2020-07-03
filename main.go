@@ -26,6 +26,6 @@ func main() {
 	router.HandleFunc("/registration", env.Registration).Methods("POST")
 	router.HandleFunc("/login", env.IdentityByLogin).Methods("POST")
 	router.HandleFunc("/login/email", env.IdentityByEmail).Methods("POST")
-	router.HandleFunc("/token/check", env.checkToken).Methods("GET", "POST")
+	router.HandleFunc("/token/check", env.CheckToken).Methods("GET", "POST")
 	http.ListenAndServe(":8000", router)
 }
