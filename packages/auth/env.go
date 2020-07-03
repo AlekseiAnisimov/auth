@@ -7,7 +7,13 @@ type Env struct {
 	db *dbx.DB
 }
 
-// GetEnvDbPointer метод полученияуказателя к ORM ozzo-dbx
+// GetEnvDbPointer метод получения указателя к ORM ozzo-dbx
 func (env *Env) GetEnvDbPointer() *dbx.DB {
 	return env.db
+}
+
+// SetEnvDbPointer установка укзателя
+func (env *Env) SetEnvDbPointer(dbPointer *dbx.DB) {
+	env.db = dbPointer
+	return
 }

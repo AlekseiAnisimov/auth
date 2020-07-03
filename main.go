@@ -20,7 +20,9 @@ func main() {
 	datasource := &dbconf.Development.Datasource
 
 	var db, _ = dbx.Open(*dialect, *datasource)
-	env := auth.Env{db: db}
+
+	env := auth.Env{}
+	env.SetEnvDbPointer(db)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/registration", env.Registration).Methods("POST")
