@@ -1,3 +1,3 @@
 dbconfig.yml
 .idea/
-.proto/*.pb.go
+proto/*.pb.go
