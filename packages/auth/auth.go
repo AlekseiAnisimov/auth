@@ -56,7 +56,14 @@ func (env *Env) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = env.db.Model(&data).Insert()
+	err = env.db.Model(&data).Insert()
+	if err != nil {
+		w.WriteHeader(500)
+		json.NewEncoder(w).Encode(map[string]error{
+			"message": err,
+		})
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(data)

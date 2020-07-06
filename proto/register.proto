@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-import "user_identity_data.proto";
+//import "user_identity_data.proto";
 
 message RegisterRequest {
   string login = 1;
@@ -12,7 +12,7 @@ message RegisterRequest {
 
 message RegisterResponse {
   string message = 1;
-  UserIdentityData UserIdentityData = 2;
+//  UserIdentityData UserIdentityData = 2;
 }
 
 service RegisterService {

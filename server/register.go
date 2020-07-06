@@ -6,7 +6,7 @@ import (
 
 	dbx "github.com/go-ozzo/ozzo-dbx"
 
-	auth "github.com/AlekseiAnisimov/auth"
+	auth "github.com/AlekseiAnisimov/auth/packages/auth"
 	register "github.com/AlekseiAnisimov/auth/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -67,8 +67,8 @@ func (s *server) Registration(ctn context.Context, request *register.RegisterReq
 	_ = envDb.Model(&data).Insert()
 
 	response = &register.RegisterResponse{
-		Message:  "Success",
-		UserData: &data,
+		Message: "Success",
+		//UserData: &data,
 	}
 
 	return response, nil
