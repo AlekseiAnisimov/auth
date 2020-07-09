@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net"
 
 	dbx "github.com/go-ozzo/ozzo-dbx"
+	_ "github.com/go-sql-driver/mysql"
 
 	auth "github.com/AlekseiAnisimov/auth/packages/auth"
 	register "github.com/AlekseiAnisimov/auth/proto"
@@ -17,7 +18,7 @@ type server struct{}
 func main() {
 	listener, err := net.Listen("tcp", ":1111")
 	if err != nil {
-		fmt.Println("Failed to listen: %v", err)
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	opts := []grpc.ServerOption{}
@@ -28,6 +29,21 @@ func main() {
 }
 
 func (s *server) Registration(ctn context.Context, request *register.RegisterRequest) (response *register.RegisterResponse, err error) {
+
+	dbconf := auth.DbConfig{}
+	err = dbconf.GetDbParamsFromYaml()
+	if err != nil {
+		log.Fatalf(" Получение данных для БД %v", err)
+	}
+
+	dialect := &dbconf.Development.Dialect
+	datasource := &dbconf.Development.Datasource
+
+	db, err := dbx.Open(*dialect, *datasource)
+
+	env := auth.Env{}
+	env.SetEnvDbPointer(db)
+
 	login := request.Login
 	email := request.Email
 	password := request.Password
@@ -52,7 +68,8 @@ func (s *server) Registration(ctn context.Context, request *register.RegisterReq
 	data.Password = data.PasswordToMd5()
 
 	user := auth.UserIdentityData{}
-	envDb := auth.Env.GetEnvDbPointer()
+
+	envDb := env.GetEnvDbPointer()
 
 	_ = envDb.Select("*").From("identity").Where(dbx.HashExp{"login": login}).One(&user)
 
