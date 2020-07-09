@@ -13,7 +13,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct{}
+type server struct {
+	envDb auth.Env
+}
 
 func main() {
 	listener, err := net.Listen("tcp", ":1111")
@@ -21,29 +23,17 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	conn, _ := dbConnection()
+
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
 
-	register.RegisterRegisterServiceServer(grpcServer, &server{})
+	register.RegisterRegisterServiceServer(grpcServer, &server{envDb: conn})
 	grpcServer.Serve(listener)
 }
 
 func (s *server) Registration(ctn context.Context, request *register.RegisterRequest) (response *register.RegisterResponse, err error) {
-
-	dbconf := auth.DbConfig{}
-	err = dbconf.GetDbParamsFromYaml()
-	if err != nil {
-		log.Fatalf(" Получение данных для БД %v", err)
-	}
-
-	dialect := &dbconf.Development.Dialect
-	datasource := &dbconf.Development.Datasource
-
-	db, err := dbx.Open(*dialect, *datasource)
-
-	env := auth.Env{}
-	env.SetEnvDbPointer(db)
-
+	env := s.envDb
 	login := request.Login
 	email := request.Email
 	password := request.Password
@@ -89,4 +79,25 @@ func (s *server) Registration(ctn context.Context, request *register.RegisterReq
 	}
 
 	return response, nil
+}
+
+//TODO:
+//  1) переписать эту шляпу
+// 2) вынести куда-нибудь
+func dbConnection() (envDb auth.Env, err error) {
+	dbconf := auth.DbConfig{}
+	err = dbconf.GetDbParamsFromYaml()
+	if err != nil {
+		log.Fatalf(" Получение данных для БД %v", err)
+	}
+
+	dialect := &dbconf.Development.Dialect
+	datasource := &dbconf.Development.Datasource
+
+	db, err := dbx.Open(*dialect, *datasource)
+
+	env := auth.Env{}
+	env.SetEnvDbPointer(db)
+
+	return env, nil
 }
