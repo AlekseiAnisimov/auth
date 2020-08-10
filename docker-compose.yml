@@ -1,0 +1,18 @@
+version: '3'
+services:
+    auth:
+        image: auth
+        ports:
+            - 8080:8000
+    mysql:
+        image: mariadb:10.3
+        restart: on-failure
+        ports:
+            - "3306:3306"
+        volumes: 
+            - ./docker/mysql:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: "123"
+            MYSQL_USER: "admin"
+            MYSQL_PASSWORD: "123"
+            MYSQL_DATABASE: "auth"

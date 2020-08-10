@@ -1,3 +1,4 @@
 dbconfig.yml
 .idea/
 proto/*.pb.go
+docker
