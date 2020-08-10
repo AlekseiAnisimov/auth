@@ -1,7 +1,7 @@
 package main
 
 import (
-	"auth/packages/auth"
+	"auth/packages/auth/packages/auth" //ппц конечно. Необходимо исправить!
 	"net/http"
 
 	dbx "github.com/go-ozzo/ozzo-dbx"

@@ -1,10 +1,10 @@
-FROM golang:1.14
+FROM golang
 
-WORKDIR src/auth
+WORKDIR . /go/src/auth
 
-RUN go get ./...
-RUN go run .
+RUN go get ..
+RUN go install github.com/AlekseiAnisimov/auth
 
-COPY . .
+ENTRYPOINT /go/bin/auth
 
-CMD ["auth-app"]
+EXPOSE 8080
