@@ -7,8 +7,11 @@ import (
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
 
-	auth "github.com/AlekseiAnisimov/auth/packages/auth"
-	register "github.com/AlekseiAnisimov/auth/proto"
+	auth "auth/packages/auth/packages/auth"
+
+	//register "github.com/AlekseiAnisimov/auth/proto"
+	register "auth/packages/auth/proto"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

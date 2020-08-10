@@ -1,9 +1,11 @@
 FROM golang
 
-WORKDIR . /go/src/auth
+WORKDIR /app
 
-RUN go get ..
-RUN go install github.com/AlekseiAnisimov/auth
+COPY ./ /app
+
+RUN go get ./...
+RUN go install
 
 ENTRYPOINT /go/bin/auth
 
